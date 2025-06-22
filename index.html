@@ -39,5 +39,16 @@
         <button onclick="window.location.href='daily_tasks.html'">Daily tasks</button>
         <button onclick="window.location.href='missions.html'">Missions</button>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+      const SUPABASE_URL = 'https://mjdkexrtlxlfobdvmazn.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qZGtleHJ0bHhsZm9iZHZtYXpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTE4ODEsImV4cCI6MjA2NjE4Nzg4MX0.NMMVJoNNS5W9Yg4hLarB4NYN3ZnuSZ-KqnYykhjRKGA';
+      const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) {
+          window.location.href = 'auth.html';
+        }
+      });
+    </script>
 </body>
 </html> 

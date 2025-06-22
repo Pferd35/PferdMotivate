@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Sign Up</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f7f7f7;
+      font-family: Arial, sans-serif;
+    }
+    .auth-container {
+      background: #fff;
+      padding: 32px 24px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    h2 {
+      margin: 0 0 8px 0;
+      text-align: center;
+    }
+    input {
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      width: 100%;
+    }
+    button {
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .message {
+      color: #d8000c;
+      text-align: center;
+      min-height: 20px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <div class="auth-container">
+    <h2>Sign Up</h2>
+    <input type="email" id="signup-email" placeholder="Email">
+    <input type="password" id="signup-password" placeholder="Password">
+    <button onclick="signUp()">Sign Up</button>
+
+    <h2>Login</h2>
+    <input type="email" id="login-email" placeholder="Email">
+    <input type="password" id="login-password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <div class="message" id="message"></div>
+  </div>
+  <script>
+    const SUPABASE_URL = 'https://mjdkexrtlxlfobdvmazn.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qZGtleHJ0bHhsZm9iZHZtYXpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTE4ODEsImV4cCI6MjA2NjE4Nzg4MX0.NMMVJoNNS5W9Yg4hLarB4NYN3ZnuSZ-KqnYykhjRKGA';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function signUp() {
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      const msg = document.getElementById('message');
+      if (error) {
+        msg.textContent = error.message;
+      } else {
+        msg.textContent = 'Sign up successful! Please check your email to confirm.';
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const msg = document.getElementById('message');
+      if (error) {
+        msg.textContent = error.message;
+      } else {
+        msg.textContent = 'Login successful! Redirecting...';
+        setTimeout(() => {
+          window.location.href = 'main_page.html';
+        }, 1000);
+      }
+    }
+
+    // Redirect to main_page.html if already logged in
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        window.location.href = 'main_page.html';
+      }
+    });
+  </script>
+</body>
+</html> 

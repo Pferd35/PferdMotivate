@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Details</title>
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .details-container {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 32px 28px 28px 28px;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .details-container label {
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .details-container input, .details-container select {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .actions button {
+            padding: 8px 18px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .save-btn {
+            background: #007bff;
+            color: #fff;
+        }
+        .back-btn {
+            background: #ccc;
+            color: #333;
+        }
+        .mission-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="details-container">
+        <div class="mission-title" id="missionTitle"></div>
+        <label for="importance">Importance:</label>
+        <select id="importance">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <label for="startDate">Starting Date:</label>
+        <input type="date" id="startDate" />
+        <div class="actions">
+            <button class="save-btn" id="saveBtn">Save</button>
+            <button class="back-btn" id="backBtn">Back</button>
+        </div>
+    </div>
+    <script>
+        // Get mission index from query
+        function getMissionIndex() {
+            const params = new URLSearchParams(window.location.search);
+            return parseInt(params.get('mission'), 10);
+        }
+        function getMissions() {
+            return JSON.parse(localStorage.getItem('missions') || '[]');
+        }
+        function getMissionDetails() {
+            return JSON.parse(localStorage.getItem('missionDetails') || '{}');
+        }
+        function saveMissionDetails(details) {
+            localStorage.setItem('missionDetails', JSON.stringify(details));
+        }
+        const idx = getMissionIndex();
+        const missions = getMissions();
+        const missionTitle = document.getElementById('missionTitle');
+        const importance = document.getElementById('importance');
+        const startDate = document.getElementById('startDate');
+        const saveBtn = document.getElementById('saveBtn');
+        const backBtn = document.getElementById('backBtn');
+        if (missions[idx]) {
+            missionTitle.textContent = missions[idx];
+        } else {
+            missionTitle.textContent = 'Mission not found';
+            importance.disabled = true;
+            startDate.disabled = true;
+            saveBtn.disabled = true;
+        }
+        // Load details if exist
+        const allDetails = getMissionDetails();
+        const details = allDetails[idx] || {};
+        if (details.importance) importance.value = details.importance;
+        if (details.startDate) startDate.value = details.startDate;
+        saveBtn.onclick = () => {
+            allDetails[idx] = {
+                importance: importance.value,
+                startDate: startDate.value
+            };
+            saveMissionDetails(allDetails);
+            alert('Mission details saved!');
+        };
+        backBtn.onclick = () => {
+            window.history.back();
+        };
+    </script>
+</body>
+</html> 

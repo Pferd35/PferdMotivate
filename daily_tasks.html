@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Tasks</title>
+    <style>
+        body {
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f8f9fa;
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            height: 60px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 0 20px;
+        }
+        .plus-button {
+            font-size: 2rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .plus-button:hover {
+            background-color: #218838;
+        }
+        .tasks-container {
+            max-width: 400px;
+            margin: 40px auto 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 24px;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .task-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 1.1rem;
+        }
+        .task-list li:last-child {
+            border-bottom: none;
+        }
+        /* Popup styles */
+        .popup-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .popup {
+            background: #fff;
+            padding: 32px 24px 24px 24px;
+            border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .popup input {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .popup .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .popup button {
+            padding: 8px 18px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .popup .save-btn {
+            background: #28a745;
+            color: #fff;
+        }
+        .popup .cancel-btn {
+            background: #ccc;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <button class="plus-button" id="addTaskBtn">+</button>
+        <button class="plus-button" id="deleteTaskBtn" style="margin-left:10px;background-color:#dc3545;">🗑️</button>
+    </div>
+    <div class="tasks-container">
+        <ul class="task-list" id="taskList"></ul>
+    </div>
+    <div id="popupBg" class="popup-bg" style="display:none;">
+        <div class="popup">
+            <label for="taskInput">Task Name:</label>
+            <input type="text" id="taskInput" placeholder="Enter task name" />
+            <div class="actions">
+                <button class="save-btn" id="saveTaskBtn">Save</button>
+                <button class="cancel-btn" id="cancelTaskBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // LocalStorage helpers
+        function getTasks() {
+            return JSON.parse(localStorage.getItem('dailyTasks') || '[]');
+        }
+        function saveTasks(tasks) {
+            localStorage.setItem('dailyTasks', JSON.stringify(tasks));
+        }
+        // Delete mode state
+        let deleteMode = false;
+        let selectedForDelete = new Set();
+        function renderTasks() {
+            const tasks = getTasks();
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+            tasks.forEach((task, idx) => {
+                const li = document.createElement('li');
+                if (deleteMode) {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.style.marginRight = '12px';
+                    checkbox.checked = selectedForDelete.has(idx);
+                    checkbox.onchange = () => {
+                        if (checkbox.checked) selectedForDelete.add(idx);
+                        else selectedForDelete.delete(idx);
+                    };
+                    li.appendChild(checkbox);
+                }
+                li.appendChild(document.createTextNode(task));
+                list.appendChild(li);
+            });
+        }
+        // Popup logic
+        const popupBg = document.getElementById('popupBg');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const saveTaskBtn = document.getElementById('saveTaskBtn');
+        const cancelTaskBtn = document.getElementById('cancelTaskBtn');
+        const taskInput = document.getElementById('taskInput');
+        const deleteTaskBtn = document.getElementById('deleteTaskBtn');
+
+        addTaskBtn.onclick = () => {
+            if (deleteMode) return; // Disable add in delete mode
+            popupBg.style.display = 'flex';
+            taskInput.value = '';
+            taskInput.focus();
+        };
+        cancelTaskBtn.onclick = () => {
+            popupBg.style.display = 'none';
+        };
+        saveTaskBtn.onclick = () => {
+            const value = taskInput.value.trim();
+            if (value) {
+                const tasks = getTasks();
+                tasks.push(value);
+                saveTasks(tasks);
+                renderTasks();
+                popupBg.style.display = 'none';
+            } else {
+                taskInput.focus();
+            }
+        };
+        // Enter key submits
+        taskInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') saveTaskBtn.onclick();
+        });
+        // Delete button logic
+        deleteTaskBtn.onclick = () => {
+            if (!deleteMode) {
+                deleteMode = true;
+                selectedForDelete = new Set();
+                deleteTaskBtn.style.backgroundColor = '#b52a37';
+                renderTasks();
+            } else {
+                // Delete selected tasks
+                if (selectedForDelete.size > 0) {
+                    let tasks = getTasks();
+                    tasks = tasks.filter((_, idx) => !selectedForDelete.has(idx));
+                    saveTasks(tasks);
+                }
+                deleteMode = false;
+                selectedForDelete = new Set();
+                deleteTaskBtn.style.backgroundColor = '#dc3545';
+                renderTasks();
+            }
+        };
+        // Initial render
+        renderTasks();
+    </script>
+</body>
+</html> 

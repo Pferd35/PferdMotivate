@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missions</title>
+    <style>
+        body {
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f8f9fa;
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            height: 60px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 0 20px;
+        }
+        .plus-button {
+            font-size: 2rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .plus-button:hover {
+            background-color: #218838;
+        }
+        .delete-button {
+            margin-left:10px;
+            background-color:#dc3545;
+        }
+        .delete-button.active {
+            background-color: #b52a37;
+        }
+        .tasks-container {
+            max-width: 400px;
+            margin: 40px auto 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 24px;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .task-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 1.1rem;
+        }
+        .task-list li:last-child {
+            border-bottom: none;
+        }
+        /* Popup styles */
+        .popup-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .popup {
+            background: #fff;
+            padding: 32px 24px 24px 24px;
+            border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .popup input {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .popup .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .popup button {
+            padding: 8px 18px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .popup .save-btn {
+            background: #28a745;
+            color: #fff;
+        }
+        .popup .cancel-btn {
+            background: #ccc;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <button class="plus-button" id="addMissionBtn">+</button>
+        <button class="plus-button delete-button" id="deleteMissionBtn">🗑️</button>
+    </div>
+    <div class="tasks-container">
+        <ul class="task-list" id="missionList"></ul>
+    </div>
+    <div id="popupBg" class="popup-bg" style="display:none;">
+        <div class="popup">
+            <label for="missionInput">Mission Name:</label>
+            <input type="text" id="missionInput" placeholder="Enter mission name" />
+            <div class="actions">
+                <button class="save-btn" id="saveMissionBtn">Save</button>
+                <button class="cancel-btn" id="cancelMissionBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // LocalStorage helpers
+        function getMissions() {
+            return JSON.parse(localStorage.getItem('missions') || '[]');
+        }
+        function saveMissions(missions) {
+            localStorage.setItem('missions', JSON.stringify(missions));
+        }
+        // Delete mode state
+        let deleteMode = false;
+        let selectedForDelete = new Set();
+        function renderMissions() {
+            const missions = getMissions();
+            const list = document.getElementById('missionList');
+            list.innerHTML = '';
+            missions.forEach((mission, idx) => {
+                const li = document.createElement('li');
+                if (deleteMode) {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.style.marginRight = '12px';
+                    checkbox.checked = selectedForDelete.has(idx);
+                    checkbox.onchange = () => {
+                        if (checkbox.checked) selectedForDelete.add(idx);
+                        else selectedForDelete.delete(idx);
+                    };
+                    li.appendChild(checkbox);
+                }
+                li.appendChild(document.createTextNode(mission));
+                if (!deleteMode) {
+                    li.style.cursor = 'pointer';
+                    li.onclick = () => {
+                        window.location.href = `mission_details.html?mission=${encodeURIComponent(idx)}`;
+                    };
+                }
+                list.appendChild(li);
+            });
+        }
+        // Popup logic
+        const popupBg = document.getElementById('popupBg');
+        const addMissionBtn = document.getElementById('addMissionBtn');
+        const saveMissionBtn = document.getElementById('saveMissionBtn');
+        const cancelMissionBtn = document.getElementById('cancelMissionBtn');
+        const missionInput = document.getElementById('missionInput');
+        const deleteMissionBtn = document.getElementById('deleteMissionBtn');
+
+        addMissionBtn.onclick = () => {
+            if (deleteMode) return; // Disable add in delete mode
+            popupBg.style.display = 'flex';
+            missionInput.value = '';
+            missionInput.focus();
+        };
+        cancelMissionBtn.onclick = () => {
+            popupBg.style.display = 'none';
+        };
+        saveMissionBtn.onclick = () => {
+            const value = missionInput.value.trim();
+            if (value) {
+                const missions = getMissions();
+                missions.push(value);
+                saveMissions(missions);
+                renderMissions();
+                popupBg.style.display = 'none';
+            } else {
+                missionInput.focus();
+            }
+        };
+        // Enter key submits
+        missionInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') saveMissionBtn.onclick();
+        });
+        // Delete button logic
+        deleteMissionBtn.onclick = () => {
+            if (!deleteMode) {
+                deleteMode = true;
+                selectedForDelete = new Set();
+                deleteMissionBtn.classList.add('active');
+                renderMissions();
+            } else {
+                // Delete selected missions
+                if (selectedForDelete.size > 0) {
+                    let missions = getMissions();
+                    missions = missions.filter((_, idx) => !selectedForDelete.has(idx));
+                    saveMissions(missions);
+                }
+                deleteMode = false;
+                selectedForDelete = new Set();
+                deleteMissionBtn.classList.remove('active');
+                renderMissions();
+            }
+        };
+        // Initial render
+        renderMissions();
+    </script>
+</body>
+</html> 

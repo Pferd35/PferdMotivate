@@ -56,6 +56,9 @@
             text-align: center;
             min-height: 20px;
         }
+        .message.success {
+            color: #388e3c;
+        }
         .switch-link {
             color: #007bff;
             cursor: pointer;
@@ -75,14 +78,14 @@
             <h2>Login</h2>
             <input type="email" id="login-email" placeholder="Email">
             <input type="password" id="login-password" placeholder="Password">
-            <button onclick="login()">Login</button>
+            <button type="button" id="login-btn">Login</button>
             <div class="switch-link" onclick="showSignUp()">Don't have an account? Sign up</div>
         </div>
         <div id="signup-form" style="display:none;">
             <h2>Sign Up</h2>
             <input type="email" id="signup-email" placeholder="Email">
             <input type="password" id="signup-password" placeholder="Password">
-            <button onclick="signUp()">Sign Up</button>
+            <button type="button" id="signup-btn">Sign Up</button>
             <div class="switch-link" onclick="showLogin()">Already have an account? Login</div>
         </div>
         <div class="message" id="message"></div>
@@ -96,37 +99,73 @@
             document.getElementById('login-form').style.display = 'none';
             document.getElementById('signup-form').style.display = 'block';
             document.getElementById('message').textContent = '';
+            document.getElementById('message').className = 'message';
         }
         function showLogin() {
             document.getElementById('signup-form').style.display = 'none';
             document.getElementById('login-form').style.display = 'block';
             document.getElementById('message').textContent = '';
+            document.getElementById('message').className = 'message';
         }
         async function signUp() {
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
-            const { data, error } = await supabase.auth.signUp({ email, password });
             const msg = document.getElementById('message');
+            msg.className = 'message';
+            if (!email || !password) {
+                msg.textContent = 'Please enter both email and password.';
+                return;
+            }
+            const { data, error } = await supabase.auth.signUp({ email, password });
             if (error) {
-                msg.textContent = error.message;
+                if (
+                    error.message.toLowerCase().includes('user already registered') ||
+                    error.message.toLowerCase().includes('email already registered') ||
+                    error.message.toLowerCase().includes('already exists') ||
+                    error.message.toLowerCase().includes('duplicate key')
+                ) {
+                    msg.textContent = 'This email is already registered. Please log in or use a different email.';
+                } else {
+                    msg.textContent = error.message;
+                }
             } else {
-                msg.textContent = 'Sign up successful! Please check your email to confirm.';
+                msg.textContent = 'Account created! Please check your email to confirm. You can now log in.';
+                msg.className = 'message success';
+                setTimeout(() => {
+                    showLogin();
+                }, 2000);
             }
         }
         async function login() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             const msg = document.getElementById('message');
+            msg.className = 'message';
+            if (!email || !password) {
+                msg.textContent = 'Please enter both email and password.';
+                return;
+            }
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) {
-                msg.textContent = error.message;
+                if (error.message.toLowerCase().includes('invalid login credentials')) {
+                    msg.textContent = 'Incorrect email or password. Please try again.';
+                } else if (error.message.toLowerCase().includes('user not found')) {
+                    msg.textContent = 'No account found with this email.';
+                } else {
+                    msg.textContent = error.message;
+                }
             } else {
                 msg.textContent = 'Login successful! Redirecting...';
+                msg.className = 'message success';
                 setTimeout(() => {
                     window.location.href = 'main_page.html';
                 }, 1000);
             }
         }
+        // Attach event listeners after DOM is loaded
+        document.getElementById('login-btn').addEventListener('click', login);
+        document.getElementById('signup-btn').addEventListener('click', signUp);
+
         // If already logged in, redirect to main_page.html
         supabase.auth.getUser().then(({ data: { user } }) => {
             if (user) {

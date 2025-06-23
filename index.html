@@ -70,7 +70,6 @@
             color: #0056b3;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
     <div class="auth-container">
@@ -79,17 +78,18 @@
             <input type="email" id="login-email" placeholder="Email">
             <input type="password" id="login-password" placeholder="Password">
             <button type="button" id="login-btn">Login</button>
-            <div class="switch-link" onclick="showSignUp()">Don't have an account? Sign up</div>
+            <div class="switch-link" id="show-signup-link">Don't have an account? Sign up</div>
         </div>
         <div id="signup-form" style="display:none;">
             <h2>Sign Up</h2>
             <input type="email" id="signup-email" placeholder="Email">
             <input type="password" id="signup-password" placeholder="Password">
             <button type="button" id="signup-btn">Sign Up</button>
-            <div class="switch-link" onclick="showLogin()">Already have an account? Login</div>
+            <div class="switch-link" id="show-login-link">Already have an account? Login</div>
         </div>
         <div class="message" id="message"></div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script>
         const SUPABASE_URL = 'https://mjdkexrtlxlfobdvmazn.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qZGtleHJ0bHhsZm9iZHZtYXpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTE4ODEsImV4cCI6MjA2NjE4Nzg4MX0.NMMVJoNNS5W9Yg4hLarB4NYN3ZnuSZ-KqnYykhjRKGA';
@@ -162,9 +162,12 @@
                 }, 1000);
             }
         }
+
         // Attach event listeners after DOM is loaded
         document.getElementById('login-btn').addEventListener('click', login);
         document.getElementById('signup-btn').addEventListener('click', signUp);
+        document.getElementById('show-signup-link').addEventListener('click', showSignUp);
+        document.getElementById('show-login-link').addEventListener('click', showLogin);
 
         // If already logged in, redirect to main_page.html
         supabase.auth.getUser().then(({ data: { user } }) => {

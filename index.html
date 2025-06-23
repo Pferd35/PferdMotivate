@@ -94,7 +94,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const SUPABASE_URL = 'https://mjdkexrtlxlfobdvmazn.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qZGtleHJ0bHhsZm9iZHZtYXpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTE4ODEsImV4cCI6MjA2NjE4Nzg4MX0.NMMVJoNNS5W9Yg4hLarB4NYN3ZnuSZ-KqnYykhjRKGA';
-            const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
             function showSignUp() {
                 document.getElementById('login-form').style.display = 'none';
@@ -117,7 +117,7 @@
                     msg.textContent = 'Please enter both email and password.';
                     return;
                 }
-                const { data, error } = await supabase.auth.signUp({ email, password });
+                const { data, error } = await supabaseClient.auth.signUp({ email, password });
                 if (error) {
                     if (
                         error.message.toLowerCase().includes('user already registered') ||
@@ -146,7 +146,7 @@
                     msg.textContent = 'Please enter both email and password.';
                     return;
                 }
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                 if (error) {
                     if (error.message.toLowerCase().includes('invalid login credentials')) {
                         msg.textContent = 'Incorrect email or password. Please try again.';
@@ -171,7 +171,7 @@
             document.getElementById('show-login-link').addEventListener('click', showLogin);
 
             // If already logged in, redirect to main_page.html
-            supabase.auth.getUser().then(({ data: { user } }) => {
+            supabaseClient.auth.getUser().then(({ data: { user } }) => {
                 if (user) {
                     window.location.href = 'main_page.html';
                 }

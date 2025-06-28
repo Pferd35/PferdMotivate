@@ -3,41 +3,675 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Web Page</title>
+    <title>Don't Break the Chain - Task Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .top-container {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            max-width: 800px;
         }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
         .button-group {
             display: flex;
-            flex-direction: column;
             gap: 20px;
-            margin-top: 40px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-        button {
-            padding: 15px 40px;
-            font-size: 1.2rem;
+
+        .nav-button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
             border: none;
-            border-radius: 8px;
-            background-color: #007bff;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.15);
             color: white;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 500;
         }
-        button:hover {
-            background-color: #0056b3;
+
+        .nav-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .calendar-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .calendar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            min-width: 400px;
+        }
+
+        .calendar-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #333;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            color: white;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .current-month-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .current-month-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+
+        .calendar-grid div:first-child,
+        .calendar-grid div:nth-child(2),
+        .calendar-grid div:nth-child(3),
+        .calendar-grid div:nth-child(4),
+        .calendar-grid div:nth-child(5),
+        .calendar-grid div:nth-child(6),
+        .calendar-grid div:nth-child(7) {
+            font-weight: 600;
+            color: #667eea;
+            padding: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .calendar-day {
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 50px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            border: 2px solid transparent;
+        }
+
+        .calendar-day:hover {
+            background: #e8ecff;
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .calendar-day.all-done {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .calendar-marks {
+            display: flex;
+            justify-content: center;
+            margin-top: 4px;
+            gap: 2px;
+            flex-wrap: wrap;
+        }
+
+        .calendar-mark {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .calendar-mark.empty {
+            background: #e0e0e0;
+        }
+
+        .tasks-sidebar {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: fit-content;
+        }
+
+        .tasks-sidebar h3 {
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+        }
+
+        #tasks-list {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        #tasks-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        #tasks-list li:hover {
+            background: #e8ecff;
+            transform: translateX(5px);
+        }
+
+        .task-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .remove-task {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            border: none;
+            color: white;
+            font-size: 1rem;
+            margin-left: auto;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-task:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+
+        #add-task-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        #new-task-input {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: white;
+            min-width: 0;
+        }
+
+        #new-task-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #add-task-form button {
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        #add-task-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        #today-tasks {
+            margin-top: 20px;
+        }
+
+        #today-tasks h4 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+        }
+
+        #today-tasks label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #today-tasks label:hover {
+            background: #e8ecff;
+        }
+
+        #today-tasks input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+            accent-color: #667eea;
+        }
+
+        @media (max-width: 1200px) {
+            .main-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .tasks-sidebar {
+                width: 100%;
+                max-width: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                padding: 10px;
+            }
+            
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .calendar {
+                min-width: 300px;
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="button-group">
-        <button onclick="window.location.href='daily_tasks.html'">Daily tasks</button>
-        <button onclick="window.location.href='missions.html'">Missions</button>
+    <div class="main-layout">
+      <div class="top-container">
+        <div class="page-header">
+          <h1>Pferd Motivation</h1>
+          <p>Choose Life</p>
+        </div>
+        <div class="button-group">
+            <button class="nav-button" onclick="window.location.href='daily_tasks.html'">Daily Tasks</button>
+            <button class="nav-button" onclick="window.location.href='missions.html'">Missions</button>
+        </div>
+        <div class="calendar-container" id="calendar-container"></div>
+      </div>
+      <div class="tasks-sidebar" id="tasks-sidebar">
+        <h3>📋 Tasks List</h3>
+        <ul id="tasks-list"></ul>
+        <form id="add-task-form">
+          <input type="text" id="new-task-input" maxlength="30" placeholder="Add a new habit..." required />
+          <button type="submit">Add</button>
+        </form>
+        <div id="today-tasks"></div>
+      </div>
     </div>
+    <script>
+      // --- Supabase setup ---
+      const SUPABASE_URL = 'https://mjdkexrtlxlfobdvmazn.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qZGtleHJ0bHhsZm9iZHZtYXpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTE4ODEsImV4cCI6MjA2NjE4Nzg4MX0.NMMVJoNNS5W9Yg4hLarB4NYN3ZnuSZ-KqnYykhjRKGA';
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      let user = null;
+      // --- Color palette for tasks ---
+      const TASK_COLORS = ['#e57373', '#64b5f6', '#81c784', '#ffd54f', '#ba68c8'];
+
+      // --- Supabase table names ---
+      const TASKS_TABLE = 'tasks';
+      const COMPLETIONS_TABLE = 'completions';
+
+      // --- State ---
+      let tasks = [];
+      let completions = {};
+      let selectedDate = new Date(); // Track selected month/year
+
+      // --- Auth check and initial load ---
+      async function checkAuthAndLoad() {
+        try {
+          console.log('Checking authentication...');
+          const { data: { user: u }, error: authError } = await supabaseClient.auth.getUser();
+          if (authError) {
+            console.error('Auth error:', authError);
+            // Show calendar anyway for debugging
+            generateCalendar();
+            return;
+          }
+          if (!u) {
+            console.log('No user found, redirecting to login...');
+            window.location.href = 'index.html';
+            return;
+          }
+          console.log('User authenticated:', u.email);
+          user = u;
+          await fetchTasks();
+          await fetchCompletions();
+          renderTasks();
+          renderTodayTasks();
+          generateCalendar();
+        } catch (error) {
+          console.error('Error in checkAuthAndLoad:', error);
+          // Show calendar anyway for debugging
+          generateCalendar();
+        }
+      }
+
+      // --- Month navigation ---
+      function previousMonth() {
+        selectedDate.setMonth(selectedDate.getMonth() - 1);
+        generateCalendar();
+      }
+
+      function nextMonth() {
+        selectedDate.setMonth(selectedDate.getMonth() + 1);
+        generateCalendar();
+      }
+
+      function goToCurrentMonth() {
+        selectedDate = new Date();
+        generateCalendar();
+      }
+
+      // --- Fetch tasks from Supabase ---
+      async function fetchTasks() {
+        const { data, error } = await supabaseClient
+          .from(TASKS_TABLE)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('order', { ascending: true });
+        tasks = data || [];
+      }
+
+      // --- Save task to Supabase ---
+      async function addTaskToSupabase(taskName) {
+        const { data, error } = await supabaseClient
+          .from(TASKS_TABLE)
+          .insert([{ user_id: user.id, name: taskName, order: tasks.length }]);
+        await fetchTasks();
+      }
+
+      // --- Remove task from Supabase ---
+      async function removeTaskFromSupabase(idx) {
+        const task = tasks[idx];
+        if (!task) return;
+        await supabaseClient
+          .from(TASKS_TABLE)
+          .delete()
+          .eq('id', task.id);
+        await fetchTasks();
+        await fetchCompletions();
+      }
+
+      // --- Fetch completions from Supabase ---
+      async function fetchCompletions() {
+        const { data, error } = await supabaseClient
+          .from(COMPLETIONS_TABLE)
+          .select('*')
+          .eq('user_id', user.id);
+        completions = {};
+        (data || []).forEach(row => {
+          if (!completions[row.date]) completions[row.date] = [];
+          completions[row.date][row.task_order] = row.completed;
+        });
+      }
+
+      // --- Save completion to Supabase ---
+      async function setCompletion(dateKey, taskIdx, completed) {
+        const task = tasks[taskIdx];
+        if (!task) return;
+        // Upsert (insert or update)
+        await supabaseClient.from(COMPLETIONS_TABLE).upsert([
+          {
+            user_id: user.id,
+            date: dateKey,
+            task_id: task.id,
+            task_order: taskIdx,
+            completed: completed
+          }
+        ], { onConflict: ['user_id', 'date', 'task_id'] });
+        await fetchCompletions();
+      }
+
+      // --- Render tasks list ---
+      function renderTasks() {
+        const list = document.getElementById('tasks-list');
+        list.innerHTML = '';
+        tasks.forEach((task, i) => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="task-color" style="background:${TASK_COLORS[i]}"></span> <span>${task.name}</span> <button class="remove-task" data-idx="${i}">✕</button>`;
+          list.appendChild(li);
+        });
+        // Remove button logic
+        document.querySelectorAll('.remove-task').forEach(btn => {
+          btn.onclick = async function() {
+            const idx = +btn.getAttribute('data-idx');
+            await removeTaskFromSupabase(idx);
+            renderTasks();
+            renderTodayTasks();
+            generateCalendar();
+          };
+        });
+      }
+
+      // --- Add task logic ---
+      document.getElementById('add-task-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const input = document.getElementById('new-task-input');
+        if (tasks.length >= 5) {
+          alert('You can only have up to 5 tasks.');
+          return;
+        }
+        if (input.value.trim() === '') return;
+        await addTaskToSupabase(input.value.trim());
+        input.value = '';
+        renderTasks();
+        renderTodayTasks();
+        generateCalendar();
+      };
+
+      // --- Render today's tasks with checkboxes ---
+      function renderTodayTasks() {
+        const todayDiv = document.getElementById('today-tasks');
+        if (tasks.length === 0) {
+          todayDiv.innerHTML = '<em style="text-align: center; color: #666; display: block;">No tasks yet. Add your first habit above!</em>';
+          return;
+        }
+        const today = new Date();
+        const dateKey = today.toISOString().slice(0,10);
+        const todayCompletions = completions[dateKey] || Array(tasks.length).fill(false);
+        let html = '<h4>✅ Today\'s Progress</h4>';
+        tasks.forEach((task, i) => {
+          html += `<label style="display:flex;align-items:center;margin-bottom:6px;cursor:pointer;">
+            <input type="checkbox" data-idx="${i}" ${todayCompletions[i] ? 'checked' : ''} />
+            <span class="task-color" style="background:${TASK_COLORS[i]};margin:0 8px 0 4px;width:16px;height:16px;display:inline-block;border-radius:50%;"></span>
+            <span>${task.name}</span>
+          </label>`;
+        });
+        todayDiv.innerHTML = html;
+        // Checkbox logic
+        todayDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
+          cb.onchange = async function() {
+            const idx = +cb.getAttribute('data-idx');
+            await setCompletion(dateKey, idx, cb.checked);
+            renderTodayTasks();
+            generateCalendar();
+          };
+        });
+      }
+
+      // --- Generate calendar with colored marks ---
+      function generateCalendar() {
+        const today = new Date();
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth();
+        const currentDay = today.getDate();
+        const monthNames = [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        let calendarHTML = `<div class="calendar">
+          <div class="calendar-header">
+            <button class="nav-btn" onclick="previousMonth()">‹</button>
+            <span>${monthNames[month]} ${year}</span>
+            <button class="nav-btn" onclick="nextMonth()">›</button>
+          </div>
+          <div class="calendar-nav">
+            <button class="current-month-btn" onclick="goToCurrentMonth()">Today</button>
+          </div>
+          <div class="calendar-grid">
+            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>`;
+        for (let i = 0; i < firstDay; i++) {
+          calendarHTML += '<div></div>';
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          const dayCompletions = completions[dateKey] || [];
+          let marks = '';
+          for (let i = 0; i < tasks.length; i++) {
+            if (dayCompletions[i]) {
+              marks += `<span class="calendar-mark" style="background:${TASK_COLORS[i]}"></span>`;
+            } else {
+              marks += `<span class="calendar-mark empty"></span>`;
+            }
+          }
+          let cellClass = 'calendar-day';
+          if (day === currentDay && month === today.getMonth() && year === today.getFullYear()) cellClass += ' today';
+          if (tasks.length > 0 && dayCompletions.length === tasks.length && dayCompletions.every(Boolean)) {
+            cellClass += ' all-done';
+          }
+          calendarHTML += `<div class="${cellClass}">${day}<div class="calendar-marks">${marks}</div></div>`;
+        }
+        calendarHTML += '</div></div>';
+        document.getElementById('calendar-container').innerHTML = calendarHTML;
+      }
+
+      // --- Initial load ---
+      checkAuthAndLoad();
+    </script>
 </body>
 </html> 

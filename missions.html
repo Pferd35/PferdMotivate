@@ -3,227 +3,768 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Missions</title>
+    <title>Missions - Pferd Motivation</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <style>
-        body {
-            height: 100vh;
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f8f9fa;
-        }
-        .top-bar {
-            display: flex;
-            align-items: center;
-            height: 60px;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            padding: 0 20px;
-        }
-        .plus-button {
-            font-size: 2rem;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: none;
-            background-color: #28a745;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .plus-button:hover {
-            background-color: #218838;
-        }
-        .delete-button {
-            margin-left:10px;
-            background-color:#dc3545;
-        }
-        .delete-button.active {
-            background-color: #b52a37;
-        }
-        .tasks-container {
-            max-width: 400px;
-            margin: 40px auto 0 auto;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            padding: 24px;
-        }
-        .task-list {
-            list-style: none;
             padding: 0;
-            margin: 0;
+            box-sizing: border-box;
         }
-        .task-list li {
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .missions-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .missions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .missions-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .add-mission-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-mission-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .missions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .mission-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .mission-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.15);
+        }
+
+        .mission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .mission-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .mission-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .mission-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            min-width: 60px;
+        }
+
+        .stat-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .delete-mission-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        .mission-card:hover .delete-mission-btn {
+            opacity: 1;
+        }
+
+        .delete-mission-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+
+        .no-missions {
+            text-align: center;
+            padding: 60px;
+            color: #666;
             font-size: 1.1rem;
         }
-        .task-list li:last-child {
-            border-bottom: none;
-        }
-        /* Popup styles */
-        .popup-bg {
+
+        /* Modal styles */
+        .modal {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.2);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
         }
-        .popup {
-            background: #fff;
-            padding: 32px 24px 24px 24px;
-            border-radius: 10px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-            min-width: 300px;
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
         }
-        .popup input {
-            padding: 10px;
-            font-size: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-        .popup .actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-        .popup button {
-            padding: 8px 18px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .popup .save-btn {
-            background: #28a745;
-            color: #fff;
-        }
-        .popup .cancel-btn {
-            background: #ccc;
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
             color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .tasks-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .tasks-section h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .task-item {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .task-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .task-item-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .task-item-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .task-item-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .task-item-status.in-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .task-item-status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .task-item-date {
+            font-size: 0.9rem;
+            color: #667eea;
+        }
+
+        .no-tasks {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .missions-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .missions-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <button class="plus-button" id="addMissionBtn">+</button>
-        <button class="plus-button delete-button" id="deleteMissionBtn">🗑️</button>
-    </div>
-    <div class="tasks-container">
-        <ul class="task-list" id="missionList"></ul>
-    </div>
-    <div id="popupBg" class="popup-bg" style="display:none;">
-        <div class="popup">
-            <label for="missionInput">Mission Name:</label>
-            <input type="text" id="missionInput" placeholder="Enter mission name" />
-            <div class="actions">
-                <button class="save-btn" id="saveMissionBtn">Save</button>
-                <button class="cancel-btn" id="cancelMissionBtn">Cancel</button>
+    <button class="back-btn" onclick="window.location.href='main_page.html'">← Back</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Missions</h1>
+            <p>Create and manage your missions</p>
+        </div>
+
+        <div class="missions-section">
+            <div class="missions-header">
+                <div class="missions-title">🎯 Your Missions</div>
+                <button class="add-mission-btn" onclick="openMissionModal()">
+                    <span>+</span>
+                    Add New Mission
+                </button>
+            </div>
+            <div class="missions-grid" id="missionsGrid">
+                <!-- Missions will be loaded here -->
             </div>
         </div>
     </div>
+
+    <!-- Mission Modal -->
+    <div class="modal" id="missionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Add New Mission</div>
+                <button class="close-btn" onclick="closeMissionModal()">&times;</button>
+            </div>
+            <form id="missionForm">
+                <div class="form-group">
+                    <label for="missionTitle">Mission Title *</label>
+                    <input type="text" id="missionTitle" required placeholder="Enter mission title">
+                </div>
+                <div class="form-group">
+                    <label for="missionDescription">Description</label>
+                    <textarea id="missionDescription" placeholder="Enter mission description"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeMissionModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveMissionBtn">Save Mission</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mission Details Modal -->
+    <div class="modal" id="missionDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="missionDetailsTitle">Mission Details</div>
+                <button class="close-btn" onclick="closeMissionDetailsModal()">&times;</button>
+            </div>
+            <div id="missionDetailsContent">
+                <!-- Mission details and tasks will be loaded here -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        // LocalStorage helpers
-        function getMissions() {
-            return JSON.parse(localStorage.getItem('missions') || '[]');
+        // Supabase setup
+        const SUPABASE_URL = 'https://mjdkexrtlxlfobdvmazn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qZGtleHJ0bHhsZm9iZHZtYXpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MTE4ODEsImV4cCI6MjA2NjE4Nzg4MX0.NMMVJoNNS5W9Yg4hLarB4NYN3ZnuSZ-KqnYykhjRKGA';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let user = null;
+        let missions = [];
+        let tasks = [];
+        let editingMissionId = null;
+        let selectedMission = null;
+
+        // Initialize
+        async function init() {
+            const { data: { user: u } } = await supabaseClient.auth.getUser();
+            if (!u) {
+                window.location.href = 'index.html';
+                return;
+            }
+            user = u;
+            await Promise.all([loadMissions(), loadTasks()]);
+            renderMissions();
         }
-        function saveMissions(missions) {
-            localStorage.setItem('missions', JSON.stringify(missions));
+
+        // Load missions from Supabase
+        async function loadMissions() {
+            const { data, error } = await supabaseClient
+                .from('missions')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: true });
+            
+            if (error) {
+                console.error('Error loading missions:', error);
+                missions = [];
+            } else {
+                missions = data || [];
+            }
         }
-        // Delete mode state
-        let deleteMode = false;
-        let selectedForDelete = new Set();
+
+        // Load tasks from Supabase
+        async function loadTasks() {
+            const { data, error } = await supabaseClient
+                .from('daily_tasks')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('due_date', { ascending: true });
+            
+            if (error) {
+                console.error('Error loading tasks:', error);
+                tasks = [];
+            } else {
+                tasks = data || [];
+            }
+        }
+
+        // Render missions
         function renderMissions() {
-            const missions = getMissions();
-            const list = document.getElementById('missionList');
-            list.innerHTML = '';
-            missions.forEach((mission, idx) => {
-                const li = document.createElement('li');
-                if (deleteMode) {
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.style.marginRight = '12px';
-                    checkbox.checked = selectedForDelete.has(idx);
-                    checkbox.onchange = () => {
-                        if (checkbox.checked) selectedForDelete.add(idx);
-                        else selectedForDelete.delete(idx);
-                    };
-                    li.appendChild(checkbox);
+            const grid = document.getElementById('missionsGrid');
+            
+            if (missions.length === 0) {
+                grid.innerHTML = '<div class="no-missions">No missions yet. Create your first mission!</div>';
+                return;
+            }
+
+            grid.innerHTML = missions.map(mission => {
+                const missionTasks = tasks.filter(task => task.mission === mission.name);
+                const completedTasks = missionTasks.filter(task => task.status === 'completed');
+                const pendingTasks = missionTasks.filter(task => task.status === 'pending');
+                
+                return `
+                    <div class="mission-card" onclick="openMissionDetails('${mission.id}')">
+                        <button class="delete-mission-btn" onclick="deleteMission('${mission.id}', event)">×</button>
+                        <div class="mission-header">
+                            <div>
+                                <div class="mission-title">${mission.name}</div>
+                                ${mission.description ? `<div class="mission-description">${mission.description}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="mission-stats">
+                            <div class="stat-item">
+                                <div class="stat-number">${missionTasks.length}</div>
+                                <div class="stat-label">Total Tasks</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">${completedTasks.length}</div>
+                                <div class="stat-label">Completed</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">${pendingTasks.length}</div>
+                                <div class="stat-label">Pending</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Modal functions
+        function openMissionModal(missionId = null) {
+            editingMissionId = missionId;
+            const modal = document.getElementById('missionModal');
+            const title = document.getElementById('modalTitle');
+            const form = document.getElementById('missionForm');
+
+            if (missionId) {
+                const mission = missions.find(m => m.id === missionId);
+                if (mission) {
+                    title.textContent = 'Edit Mission';
+                    document.getElementById('missionTitle').value = mission.name;
+                    document.getElementById('missionDescription').value = mission.description || '';
                 }
-                li.appendChild(document.createTextNode(mission));
-                if (!deleteMode) {
-                    li.style.cursor = 'pointer';
-                    li.onclick = () => {
-                        window.location.href = `mission_details.html?mission=${encodeURIComponent(idx)}`;
-                    };
+            } else {
+                title.textContent = 'Add New Mission';
+                form.reset();
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeMissionModal() {
+            const modal = document.getElementById('missionModal');
+            modal.classList.remove('active');
+            editingMissionId = null;
+        }
+
+        function openMissionDetails(missionId) {
+            selectedMission = missions.find(m => m.id === missionId);
+            if (!selectedMission) return;
+
+            const modal = document.getElementById('missionDetailsModal');
+            const title = document.getElementById('missionDetailsTitle');
+            const content = document.getElementById('missionDetailsContent');
+
+            title.textContent = selectedMission.name;
+
+            const missionTasks = tasks.filter(task => task.mission === selectedMission.name);
+            
+            content.innerHTML = `
+                <div class="form-group">
+                    <label>Description</label>
+                    <div style="padding: 12px; background: #f8f9ff; border-radius: 12px; color: #666;">
+                        ${selectedMission.description || 'No description provided'}
+                    </div>
+                </div>
+                <div class="tasks-section">
+                    <h3>📋 Connected Tasks (${missionTasks.length})</h3>
+                    ${missionTasks.length > 0 ? 
+                        missionTasks.map(task => `
+                            <div class="task-item">
+                                <div class="task-item-header">
+                                    <div class="task-item-title">${task.title}</div>
+                                    <div class="task-item-status ${task.status}">${task.status}</div>
+                                </div>
+                                <div class="task-item-date">Due: ${formatDate(task.due_date)}</div>
+                                ${task.description ? `<div style="margin-top: 8px; color: #666; font-size: 0.9rem;">${task.description}</div>` : ''}
+                            </div>
+                        `).join('') : 
+                        '<div class="no-tasks">No tasks connected to this mission yet.</div>'
+                    }
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeMissionDetailsModal() {
+            const modal = document.getElementById('missionDetailsModal');
+            modal.classList.remove('active');
+            selectedMission = null;
+        }
+
+        // Save mission
+        async function saveMission(missionData) {
+            try {
+                if (editingMissionId) {
+                    // Update existing mission
+                    const { error } = await supabaseClient
+                        .from('missions')
+                        .update(missionData)
+                        .eq('id', editingMissionId);
+                    
+                    if (error) throw error;
+                } else {
+                    // Create new mission
+                    const { error } = await supabaseClient
+                        .from('missions')
+                        .insert([{ ...missionData, user_id: user.id }]);
+                    
+                    if (error) throw error;
                 }
-                list.appendChild(li);
+
+                await loadMissions();
+                renderMissions();
+                closeMissionModal();
+            } catch (error) {
+                console.error('Error saving mission:', error);
+                alert('Error saving mission. Please try again.');
+            }
+        }
+
+        // Delete mission
+        async function deleteMission(missionId, event) {
+            event.stopPropagation(); // Prevent opening mission details
+            
+            if (!confirm('Are you sure you want to delete this mission? This will also remove the mission from all connected tasks.')) {
+                return;
+            }
+
+            try {
+                const mission = missions.find(m => m.id === missionId);
+                if (!mission) return;
+
+                // Update all tasks that reference this mission
+                await supabaseClient
+                    .from('daily_tasks')
+                    .update({ mission: null })
+                    .eq('user_id', user.id)
+                    .eq('mission', mission.name);
+
+                // Delete the mission
+                await supabaseClient
+                    .from('missions')
+                    .delete()
+                    .eq('id', missionId);
+
+                await Promise.all([loadMissions(), loadTasks()]);
+                renderMissions();
+            } catch (error) {
+                console.error('Error deleting mission:', error);
+                alert('Error deleting mission. Please try again.');
+            }
+        }
+
+        // Form submission
+        document.getElementById('missionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const missionData = {
+                name: document.getElementById('missionTitle').value,
+                description: document.getElementById('missionDescription').value || null
+            };
+
+            saveMission(missionData);
+        });
+
+        // Utility functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
             });
         }
-        // Popup logic
-        const popupBg = document.getElementById('popupBg');
-        const addMissionBtn = document.getElementById('addMissionBtn');
-        const saveMissionBtn = document.getElementById('saveMissionBtn');
-        const cancelMissionBtn = document.getElementById('cancelMissionBtn');
-        const missionInput = document.getElementById('missionInput');
-        const deleteMissionBtn = document.getElementById('deleteMissionBtn');
 
-        addMissionBtn.onclick = () => {
-            if (deleteMode) return; // Disable add in delete mode
-            popupBg.style.display = 'flex';
-            missionInput.value = '';
-            missionInput.focus();
-        };
-        cancelMissionBtn.onclick = () => {
-            popupBg.style.display = 'none';
-        };
-        saveMissionBtn.onclick = () => {
-            const value = missionInput.value.trim();
-            if (value) {
-                const missions = getMissions();
-                missions.push(value);
-                saveMissions(missions);
-                renderMissions();
-                popupBg.style.display = 'none';
-            } else {
-                missionInput.focus();
+        // Close modals when clicking outside
+        document.getElementById('missionModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeMissionModal();
             }
-        };
-        // Enter key submits
-        missionInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') saveMissionBtn.onclick();
         });
-        // Delete button logic
-        deleteMissionBtn.onclick = () => {
-            if (!deleteMode) {
-                deleteMode = true;
-                selectedForDelete = new Set();
-                deleteMissionBtn.classList.add('active');
-                renderMissions();
-            } else {
-                // Delete selected missions
-                if (selectedForDelete.size > 0) {
-                    let missions = getMissions();
-                    missions = missions.filter((_, idx) => !selectedForDelete.has(idx));
-                    saveMissions(missions);
-                }
-                deleteMode = false;
-                selectedForDelete = new Set();
-                deleteMissionBtn.classList.remove('active');
-                renderMissions();
+
+        document.getElementById('missionDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeMissionDetailsModal();
             }
-        };
-        // Initial render
-        renderMissions();
+        });
+
+        // Initialize the page
+        init();
     </script>
 </body>
 </html> 
